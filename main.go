@@ -61,7 +61,8 @@ func GetResultsXact(client *xact.Client, event string) (Event, error) {
 	val := Event{
 		Results: []RunResult{},
 	}
-	for i := 0; i < totalResults; i = i + 1000 {
+	pageSize := 0
+	for i := 0; i < totalResults; i += pageSize {
 		result, err := client.GetRunData(event, i)
 		if err != nil {
 			return val, err
@@ -69,6 +70,10 @@ func GetResultsXact(client *xact.Client, event string) (Event, error) {
 
 		if totalResults == math.MaxInt {
 			totalResults = result.ITotalRecords
+		}
+
+		if pageSize == 0 {
+			pageSize = len(result.AaData)
 		}
 
 		for _, runner := range result.AaData {
@@ -102,7 +107,9 @@ func GetResults(client *competitor.Client, event string) (Event, error) {
 	val := Event{
 		Results: []RunResult{},
 	}
-	for i := 0; i < totalResults; i = i + 1000 {
+
+	pageSize := 0
+	for i := 0; i < totalResults; i += pageSize {
 		result, err := client.GetRunData(event, 1000, i)
 		if err != nil {
 			return val, err
@@ -111,8 +118,13 @@ func GetResults(client *competitor.Client, event string) (Event, error) {
 		if val.Name == "" {
 			val.Name = result.Data[0].SubeventName
 		}
+
 		if totalResults == math.MaxInt {
 			totalResults = result.Total
+		}
+
+		if pageSize == 0 {
+			pageSize = len(result.Data)
 		}
 
 		for _, runner := range result.Data {
